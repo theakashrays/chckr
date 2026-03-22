@@ -98,8 +98,18 @@
     margin-bottom: 15px;
   }
 
-  @media (max-width: 768px) {
+  .input-group-extended {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 900px) {
     .input-group {
+      grid-template-columns: 1fr;
+    }
+    .input-group-extended {
       grid-template-columns: 1fr;
     }
   }
@@ -404,6 +414,33 @@
     border-radius: 4px;
     font-size: 0.7rem;
   }
+
+  .expiry-container {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 10px;
+    display: none; /* Hidden by default */
+  }
+  
+  .expiry-container.active {
+    display: block;
+  }
+  
+  .expiry-label {
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin-bottom: 5px;
+  }
+  
+  .expiry-inputs {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .expiry-inputs input {
+    width: 100%;
+  }
 </style>
 </head>
 <body>
@@ -419,7 +456,8 @@
   <div class="panel active" id="generatorPanel">
     <div class="card">
       <div class="card-title">Card Generator</div>
-      <div class="input-group">
+      
+      <div class="input-group-extended">
         <div>
           <input type="text" id="binInput" placeholder="BIN (e.g. 45854600107)" value="45854600107">
         </div>
@@ -434,10 +472,29 @@
         <div>
           <input type="number" id="countInput" value="50" min="1" max="500">
         </div>
+        
+        <!-- Expiry Settings -->
+        <div>
+          <select id="expiryMode" onchange="toggleExpiryInput()">
+            <option value="random">Random Expiry</option>
+            <option value="custom">Custom Expiry</option>
+          </select>
+        </div>
+
         <button class="btn-primary" onclick="generate()">
           <span>Generate</span>
         </button>
       </div>
+      
+      <!-- Custom Expiry Inputs Container -->
+      <div class="expiry-container" id="customExpiryContainer">
+        <div class="expiry-label">Set Expiry for all cards:</div>
+        <div class="expiry-inputs">
+          <input type="number" id="customMonth" placeholder="MM (01-12)" min="1" max="12">
+          <input type="number" id="customYear" placeholder="YY (26-35)" min="26" max="35">
+        </div>
+      </div>
+      
       <div style="display: flex; gap: 10px;">
         <button class="btn-secondary" onclick="copyGenerated()">
           <span>Copy All</span>
@@ -661,6 +718,18 @@ function switchTab(tab) {
   }
 }
 
+// Toggle Expiry Inputs
+function toggleExpiryInput() {
+  const mode = document.getElementById('expiryMode').value;
+  const container = document.getElementById('customExpiryContainer');
+  
+  if (mode === 'custom') {
+    container.classList.add('active');
+  } else {
+    container.classList.remove('active');
+  }
+}
+
 // View toggling for API checker
 function showAllResults() {
   document.querySelector('.view-btn:nth-child(1)').classList.add('active');
@@ -818,6 +887,20 @@ function generate() {
   const bin = document.getElementById('binInput').value.trim() || '45854600107';
   const cardType = document.getElementById('cardType').value;
   const count = Math.min(parseInt(document.getElementById('countInput').value) || 50, 500);
+  const expiryMode = document.getElementById('expiryMode').value;
+  
+  // Custom Expiry Handling
+  let customExp = null;
+  if (expiryMode === 'custom') {
+    const m = document.getElementById('customMonth').value;
+    const y = document.getElementById('customYear').value;
+    
+    if (!m || !y || m < 1 || m > 12 || y < 26 || y > 35) {
+      showToast('Invalid custom expiry date');
+      return;
+    }
+    customExp = `${String(m).padStart(2, '0')}/${String(y).padStart(2, '0')}`;
+  }
   
   generatedLines = [];
   let attempts = 0;
@@ -827,7 +910,10 @@ function generate() {
     attempts++;
     
     const card = generateCard(bin, cardType);
-    const exp = generateExpiry();
+    
+    // Use custom expiry if set, otherwise random
+    const exp = customExp ? customExp : generateExpiry();
+    
     const cvv = generateCVV(getCardType(card));
     
     if (validateGenerated(card, exp, cvv, bin, cardType)) {
